@@ -16,3 +16,5 @@ GenerateKey()
     const i = await ImportPrivateKey(private_);
     console.log({ exported, i });
   });
+
+  import "./components/wallet.js"

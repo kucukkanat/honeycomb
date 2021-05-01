@@ -10,29 +10,48 @@ const RsaHashedKeyGenParams = {
 export class RSA {
   /**
    * Automatically exports private and public keys upon generation
-   * @returns {Promise<{PrivateKey:string,PublicKey:string}>}
+   * @returns {Promise<{privateKey:string,publicKey:string}>}
    */
   static async GenerateKeyPair() {
+    Logger.log("Exporting keys")
     const { privateKey, publicKey } = await crypto.subtle.generateKey(RsaHashedKeyGenParams, true, [
       "encrypt",
       "decrypt",
     ]);
-    let exportedPublicKey = await RSA.ExportPublicKeyAsString(publicKey)
 
-    let exportedPrivateKey = await RSA.ExportPrivateKeyAsString(privateKey)
-    Logger.log("Exporting keys")
-    return { PrivateKey: exportedPrivateKey, PublicKey: exportedPublicKey }
+    return { privateKey, publicKey }
   }
 
   /**
-   * Imports a privatekey as a string and returns a CryptoKey
-   * @param {string} privatKeyString 
+   * Imports a base64 private key string 
+   * base64 -> ArrayBuffer -> CryptoKey
+   * @param {ArrayBuffer} privateKey 
    * @returns {CryptoKey}
    */
-  static async ImportPrivateKey(privatKeyString) {
+  static async ImportPrivateKeyFromString(privatKeyString) {
+    return await RSA.ImportPrivateKey(ArrayBufferTools.str2ab(atob(privatKeyString)))
+  }
+
+  /**
+   * Imports a base64 public key string 
+   * base64 -> ArrayBuffer -> CryptoKey
+   * @param {ArrayBuffer} privatKeyString 
+   * @returns {CryptoKey}
+   */
+  static async ImportPublicKeyFromString(publicKeyString) {
+    return await RSA.ImportPublicKey(ArrayBufferTools.str2ab(atob(publicKeyString)))
+  }
+
+
+  /**
+   * Imports a private key 
+   * @param {ArrayBuffer} privateKey 
+   * @returns {CryptoKey}
+   */
+  static async ImportPrivateKey(privateKey) {
     return await crypto.subtle.importKey(
       "pkcs8",
-      ArrayBufferTools.str2ab(atob(privatKeyString)),
+      privateKey,
       RsaHashedKeyGenParams,
       true,
       ["decrypt"]
@@ -40,19 +59,20 @@ export class RSA {
   }
 
   /**
-   * Imports a public key as a string and returns a CryptoKey
-   * @param {string} privatKeyString 
+   * Imports a public key
+   * @param {ArrayBuffer} privatKeyString 
    * @returns {CryptoKey}
    */
-  static async ImportPublicKey(publicKeyString) {
+  static async ImportPublicKey(publicKey) {
     return await crypto.subtle.importKey(
       "spki",
-      ArrayBufferTools.str2ab(atob(publicKeyString)),
+      publicKey,
       RsaHashedKeyGenParams,
       true,
       ["encrypt"]
     );
   }
+
 
   /**
    * @param {CryptoKey} privateKey 
@@ -87,6 +107,19 @@ export class RSA {
     return btoa(ArrayBufferTools.ab2str(exported))
   }
 
+  static async Encrypt(data, publicKey) {
+    const encoder = new TextEncoder()
+    const encoded = encoder.encode(data)
+    const encrypted = crypto.subtle.encrypt(
+      {
+        name: "RSA_OAEP",
+      },
+      publicKey,
+      encoded
+    )
+    return ArrayBufferTools.ab2str(encrypted)
+  }
+
 }
 
 class ArrayBufferTools {
@@ -104,7 +137,7 @@ class ArrayBufferTools {
   static str2ab(str) {
     const buf = new ArrayBuffer(str.length);
     const bufView = new Uint8Array(buf);
-    for (let i = 0, strLen = str.length; i < strLen; i++) {
+    for (let i = 0; i < str.length; i++) {
       bufView[i] = str.charCodeAt(i);
     }
     return buf;

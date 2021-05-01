@@ -1,7 +1,7 @@
 import { RSA } from "./crypto.js"
 import chai from "./tests/chai.esm.js"
 const { expect } = chai
-const { GenerateKeyPair, ImportPrivateKey, ExportPrivateKeyAsString, ExportPublicKeyAsString, ImportPublicKey } = RSA
+const { GenerateKeyPair, ImportPrivateKeyFromString, ExportPrivateKeyAsString, ExportPublicKeyAsString, ImportPublicKeyFromString } = RSA
 
 describe("generate key pair", async () => {
     let keypair;
@@ -10,16 +10,24 @@ describe("generate key pair", async () => {
     })
 
     it("expects to import and export the private key correctly", async () => {
-        const { PrivateKey } = keypair
-        const importedPrivateKey = await ImportPrivateKey(PrivateKey)
+        const privateKeyAsString = await ExportPrivateKeyAsString(keypair.privateKey)
+        const importedPrivateKey = await ImportPrivateKeyFromString(privateKeyAsString)
         const exportedPrivateKey = await ExportPrivateKeyAsString(importedPrivateKey)
-        expect(exportedPrivateKey).to.equal(PrivateKey)
+        expect(exportedPrivateKey).to.equal(privateKeyAsString)
     })
 
     it("expects to import and export the public key correctly", async () => {
-        const { PublicKey } = keypair
-        const importedPublicKey = await ImportPublicKey(PublicKey)
+        const publicKeyAsString = await ExportPublicKeyAsString(keypair.publicKey)
+        const importedPublicKey = await ImportPublicKeyFromString(publicKeyAsString)
         const exportedPublicKey = await ExportPublicKeyAsString(importedPublicKey)
-        expect(exportedPublicKey).to.equal(PublicKey)
+        
+        expect(exportedPublicKey).to.equal(publicKeyAsString)
     })
+
+    // it("expects the private key to decrypt public key encrypted text", async () => {
+    //     const {privateKey} = keypair
+    //     const data = "hello world"
+    //     const encrypted = await RSA.Encrypt(data,PublicKey)
+    //     console.log({encrypted})
+    // })
 })

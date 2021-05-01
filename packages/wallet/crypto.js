@@ -18,8 +18,20 @@ export class RSA {
       "encrypt",
       "decrypt",
     ]);
+    const PrivateKey = {
+      key: privateKey,
+      toString: async () => {
+        return await RSA.ExportPrivateKeyAsString(privateKey)
+      }
+    }
 
-    return { privateKey, publicKey }
+    const PublicKey = {
+      key: publicKey,
+      toString: async () => {
+        return await RSA.ExportPublicKeyAsString(publicKey)
+      }
+    }
+    return { PrivateKey, PublicKey }
   }
 
   /**
@@ -29,7 +41,7 @@ export class RSA {
    * @returns {CryptoKey}
    */
   static async ImportPrivateKeyFromString(privatKeyString) {
-    return await RSA.ImportPrivateKey(ArrayBufferTools.str2ab(atob(privatKeyString)))
+    return await RSA.ImportPrivateKey(Tools.str2ab(atob(privatKeyString)))
   }
 
   /**
@@ -39,7 +51,7 @@ export class RSA {
    * @returns {CryptoKey}
    */
   static async ImportPublicKeyFromString(publicKeyString) {
-    return await RSA.ImportPublicKey(ArrayBufferTools.str2ab(atob(publicKeyString)))
+    return await RSA.ImportPublicKey(Tools.str2ab(atob(publicKeyString)))
   }
 
 
@@ -94,7 +106,7 @@ export class RSA {
    */
   static async ExportPrivateKeyAsString(publicKey) {
     let exported = await RSA.ExportPrivateKey(publicKey)
-    return btoa(ArrayBufferTools.ab2str(exported))
+    return Tools.ArrayBuffer2Base64(exported)
   }
 
   /**
@@ -104,7 +116,7 @@ export class RSA {
    */
   static async ExportPublicKeyAsString(publicKey) {
     let exported = await RSA.ExportPublicKey(publicKey)
-    return btoa(ArrayBufferTools.ab2str(exported))
+    return Tools.ArrayBuffer2Base64(exported)
   }
 
   static async Encrypt(data, publicKey) {
@@ -117,12 +129,12 @@ export class RSA {
       publicKey,
       encoded
     )
-    return ArrayBufferTools.ab2str(encrypted)
+    return Tools.ab2str(encrypted)
   }
 
 }
 
-class ArrayBufferTools {
+class Tools {
   /*
   Convert  an ArrayBuffer into a string
   from https://developers.google.com/web/updates/2012/06/How-to-convert-ArrayBuffer-to-and-from-String
@@ -141,5 +153,21 @@ class ArrayBufferTools {
       bufView[i] = str.charCodeAt(i);
     }
     return buf;
+  }
+  /**
+   * 
+   * @param {string} base64Key 
+   * @returns {ArrayBuffer}
+   */
+  static Base64Key2ArrayBuffer(base64Key) {
+    return Tools.str2ab(atob(base64Key))
+  }
+  /**
+   * 
+   * @param {ArrayBuffer} arrayBuffer 
+   * @returns {string}
+   */
+  static ArrayBuffer2Base64(arrayBuffer) {
+    return btoa(Tools.ab2str(arrayBuffer))
   }
 }

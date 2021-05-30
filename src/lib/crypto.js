@@ -16,20 +16,14 @@ export async function GenerateKey() {
 
 export async function ExportPublicKey(key) {
   const exported = await crypto.subtle.exportKey("spki", key);
-  return btoa(ab2str(exported));
+  const exportedAsString = btoa(ab2str(exported));
+  return exportedAsString;
 }
 
 export async function ExportPrivateKey(key) {
   const exported = await crypto.subtle.exportKey("pkcs8", key);
-  return btoa(ab2str(exported));
-}
-
-/*
-Convert  an ArrayBuffer into a string
-from https://developers.google.com/web/updates/2012/06/How-to-convert-ArrayBuffer-to-and-from-String
-*/
-function ab2str(buf) {
-  return String.fromCharCode.apply(null, new Uint8Array(buf));
+  const exportedAsString = btoa(ab2str(exported));
+  return exportedAsString;
 }
 
 export async function ImportPrivateKey(base64PrivateKeyString) {
@@ -39,6 +33,16 @@ export async function ImportPrivateKey(base64PrivateKeyString) {
     format,
     true,
     ["decrypt"]
+  );
+}
+
+export async function ImportPublicKey(base64PublicKeyString) {
+  return await crypto.subtle.importKey(
+    "spki",
+    new str2ab(atob(base64PublicKeyString)),
+    format,
+    true,
+    ["encrypt"]
   );
 }
 
@@ -53,4 +57,11 @@ function str2ab(str) {
     bufView[i] = str.charCodeAt(i);
   }
   return buf;
+}
+/*
+Convert  an ArrayBuffer into a string
+from https://developers.google.com/web/updates/2012/06/How-to-convert-ArrayBuffer-to-and-from-String
+*/
+function ab2str(buf) {
+  return String.fromCharCode.apply(null, new Uint8Array(buf));
 }
